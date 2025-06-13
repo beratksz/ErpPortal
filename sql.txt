@@ -1,0 +1,610 @@
+DECLARE
+  key_ref_             VARCHAR2(200)    := :KEY_REF;
+  resource_id_         VARCHAR2(50)     := :RESOURCE_ID;
+  note_text_           VARCHAR2(1000)   := :NOTE_TEXT;
+  current_employee_id_ VARCHAR2(50);
+  op_id_msg_           VARCHAR2(2000);
+  employee_id_msg_     VARCHAR2(2000);
+  info_                      VARCHAR2(2000);
+  objid_                     VARCHAR2(2000);
+  objversion_                VARCHAR2(2000);
+  attr_                      VARCHAR2(2000);
+BEGIN
+    
+  FOR rec_ IN (SELECT CONTRACT,
+                      COMPANY,
+                      WORK_CENTER_NO,
+                      ORDER_NO,
+                      RELEASE_NO,
+                      SEQUENCE_NO,
+                      OPERATION_NO,
+                      OPERATION_DESCRIPTION,
+                      OP_ID,
+                      OP_SEQUENCE_NO,
+                      PART_NO
+                 FROM IFSAPP.SO_OPER_DISPATCH_LIST
+                WHERE key_ref_ LIKE '%-' || (ORDER_NO || '-'||RELEASE_NO||'-'||SEQUENCE_NO||'-'||OPERATION_NO))  
+  LOOP
+    op_id_msg_ := '!
+$OP_ID={OP_ID}
+';
+    employee_id_msg_ := '!
+';
+
+    op_id_msg_ := REPLACE(op_id_msg_,'{OP_ID}',rec_.op_id);
+  
+    IFSAPP.SHOP_OPER_CLOCKING_UTIL_API.Start_Operation(op_id_msg_               => op_id_msg_,
+                                                       start_time_              => SYSDATE,
+                                                       machine_time_            => 'TRUE',
+                                                       labor_time_              => 'FALSE',
+                                                       crew_size_               => 0,
+                                                       note_text_               => note_text_,
+                                                       time_type_db_            => 'RUN TIME',
+                                                       contract_                => rec_.contract,
+                                                       work_center_no_          => rec_.work_center_no,
+                                                       resource_id_             => resource_id_,
+                                                       company_                 => rec_.company,
+                                                       current_employee_id_     => current_employee_id_,
+                                                       employee_id_msg_         => employee_id_msg_,
+                                                       current_team_id_         => NULL,
+                                                       stop_employee_clockings_ => 'FALSE',
+                                                       from_dispatch_list_      => 'TRUE');
+
+
+
+
+  BEGIN
+  SELECT A.objid, A.objversion
+    INTO objid_, objversion_
+    FROM SO_OPER_DISPATCH_LIST A
+    WHERE A.op_id = rec_.op_id
+    AND A.contract = rec_.contract;
+  END;
+   Client_Sys.Clear_Attr(attr_);
+   Client_Sys.Add_To_Attr('NOTE_TEXT', note_text_, attr_);
+   IFSAPP.SHOP_ORDER_OPERATION_API.MODIFY__(info_, objid_, objversion_, attr_, 'DO');
+  END LOOP;
+END;
+
+
+
+
+
+
+
+DECLARE
+   key_ref_               VARCHAR2(100) := :KEY_REF;
+   stop_reason_           VARCHAR2(50)  := :STOP_REASON;
+   interruption_cause_id_ VARCHAR2(50)  := :INTERRUPTION_CAUSE_ID;
+   interruption_note_     VARCHAR2(200) := :INTERRUPTION_NOTE;
+   current_employee_id_   VARCHAR2(100);
+   note_text_             VARCHAR2(2000) := :NOTE_TEXT;
+BEGIN
+  FOR rec_ IN (SELECT CONTRACT,
+                      COMPANY,
+                      ORDER_NO,
+                      RELEASE_NO,
+                      SEQUENCE_NO,
+                      OPERATION_NO,
+                      OPERATION_DESCRIPTION,
+                      OP_ID,
+                      OP_SEQUENCE_NO,
+                      PART_NO
+                 FROM IFSAPP.SO_OPER_DISPATCH_LIST
+                WHERE key_ref_ LIKE '%-' || (ORDER_NO || '-'||RELEASE_NO||'-'||SEQUENCE_NO||'-'||OPERATION_NO))  
+  LOOP
+    IFSAPP.Shop_Oper_Clocking_Util_API.Stop_Operation(
+              order_no_              => rec_.order_no,
+              release_no_            => rec_.release_no,
+              sequence_no_           => rec_.sequence_no,
+              operation_no_          => rec_.operation_no,
+              finish_time_           => SYSDATE,
+              stop_reason_           => IFSAPP.Stop_Reason_API.Decode(stop_reason_),
+              note_text_             => note_text_,
+              contract_              => rec_.contract,
+              interruption_cause_id_ => interruption_cause_id_,
+              interruption_note_     => interruption_note_,
+              company_               => rec_.company,
+              current_employee_id_   => current_employee_id_,
+              current_team_id_       => NULL,
+              operation_closed_      => 'FALSE',
+              from_dispatch_list_    => 'TRUE',
+              crew_size_             => NULL);
+  END LOOP;
+END;
+
+
+
+
+DECLARE
+  key_ref_                   VARCHAR2(200)    := :KEY_REF;
+  qty_                       NUMBER           := :QTY;
+  note_text_                 VARCHAR2(1000)   := :NOTE_TEXT;
+  current_employee_id_       VARCHAR2(50);
+  
+  info_                      VARCHAR2(2000);
+  objid_                     VARCHAR2(2000);
+  objversion_                VARCHAR2(2000);
+  attr_                      VARCHAR2(2000);
+  close_operation_db_        VARCHAR2(5):= 'FALSE';
+  receive_location_no_       VARCHAR2(100);
+  receive_with_backflush_    VARCHAR2(5):='NO';
+  auto_receive_db_           VARCHAR2(5):='FALSE';
+  qty_to_receive_            NUMBER;
+  stop_time_db_              VARCHAR2(5):='FALSE';
+  finish_time_               DATE := NULL;
+  expiration_date_           DATE;
+BEGIN
+  
+  FOR rec_ IN (SELECT CONTRACT,
+                      COMPANY,
+                      WORK_CENTER_NO,
+                      ORDER_NO,
+                      RELEASE_NO,
+                      SEQUENCE_NO,
+                      OPERATION_NO,
+                      OPERATION_DESCRIPTION,
+                      OP_ID,
+                      OP_SEQUENCE_NO,
+                      PART_NO,
+                      IFSAPP.Shop_Order_Operation_API.Get_Remaining_Qty(order_no,
+                                                         release_no,
+                                                         sequence_no,
+                                                         operation_no) Remaining_Qty,
+                      IFSAPP.Shop_Order_Operation_List_API.Is_Last_Operation(Order_No,
+                                                              Release_No,
+                                                              Sequence_No,
+                                                              Operation_No) Is_Last_Operation,
+                      IFSAPP.Shop_Ord_API.Get_Default_Receipt_Location(Order_No, Release_No, Sequence_No) LOCATION,
+                      IFSAPP.Site_API.Get_Site_Date(CONTRACT) site_date
+                 FROM IFSAPP.SO_OPER_DISPATCH_LIST
+                WHERE key_ref_ LIKE '%-' || (ORDER_NO || '-'||RELEASE_NO||'-'||SEQUENCE_NO||'-'||OPERATION_NO))  
+  LOOP
+   IF qty_ >= rec_.remaining_qty THEN
+     close_operation_db_ := 'TRUE';
+     stop_time_db_ := 'TRUE';
+     finish_time_ := SYSDATE;
+   END IF;
+  
+   IF rec_.is_last_operation = 'TRUE' THEN
+     qty_to_receive_ := qty_;
+     receive_location_no_ := rec_.location;
+     receive_with_backflush_ := 'YES';
+     auto_receive_db_ :='TRUE';
+   END IF;
+   
+   IFSAPP.Shop_Ord_API.Calculate_Expiration_Date(expiration_date_ => expiration_date_,
+                                                 order_no_        => rec_.order_no,
+                                                 release_no_      => rec_.release_no ,
+                                                 sequence_no_     => rec_.sequence_no,
+                                                 part_no_         => rec_.part_no,
+                                                 contract_        => rec_.contract);
+   
+  
+   IFSAPP.Shop_Order_Operation_API.Approve_Operation(info_                      => info_,
+                                                     order_no_                  => rec_.order_no,
+                                                     release_no_                => rec_.release_no,
+                                                     sequence_no_               => rec_.sequence_no,
+                                                     operation_no_              => rec_.operation_no,
+                                                     op_id_                     => rec_.op_id,
+                                                     qty_                       => qty_,
+                                                     close_operation_db_        => close_operation_db_,
+                                                     report_prev_op_db_         => 'FALSE',
+                                                     auto_receive_db_           => auto_receive_db_,
+                                                     receive_with_backflush_    => Fnd_Yes_No_Api.Decode(receive_with_backflush_),
+                                                     qty_to_receive_            => qty_to_receive_,
+                                                     receive_location_no_       => receive_location_no_,
+                                                     report_time_db_            => 'TRUE',
+                                                     stop_time_db_              => stop_time_db_,
+                                                     finish_time_               => finish_time_,
+                                                     note_text_                 => note_text_,
+                                                     mach_run_time_             => NULL,
+                                                     mach_setup_time_           => NULL,
+                                                     resource_share_            => NULL,
+                                                     labor_run_time_            => NULL,
+                                                     labor_setup_time_          => NULL,
+                                                     catch_qty_                 => NULL,
+                                                     crew_size_                 => NULL,
+                                                     setup_crew_size_           => 0,
+                                                     company_                   => rec_.company,
+                                                     current_employee_id_       => current_employee_id_,
+                                                     employee_id_msg_           => NULL,
+                                                     current_team_id_           => NULL,
+                                                     simplified_material_check_ => Fnd_Yes_No_Api.Decode('NO'),
+                                                     waiv_dev_rej_no_           => NULL,
+                                                     expiration_date_           => expiration_date_,
+                                                     manufactured_date_         => NULL,
+                                                     availability_control_id_   => NULL,
+                                                     condition_code_            => NULL,
+                                                     close_so_on_receipt_db_    => NULL,
+                                                     session_id_                => 0,
+                                                     auto_report_db_            => 'FALSE');
+
+BEGIN
+    SELECT A.objid, A.objversion
+    INTO objid_, objversion_
+    FROM SO_OPER_DISPATCH_LIST A
+    WHERE A.op_id = rec_.op_id
+    AND A.contract = rec_.contract;
+  END;
+   Client_Sys.Clear_Attr(attr_);
+   Client_Sys.Add_To_Attr('NOTE_TEXT', note_text_, attr_);
+   IFSAPP.SHOP_ORDER_OPERATION_API.MODIFY__(info_, objid_, objversion_, attr_, 'DO');
+  END LOOP;
+END;
+
+
+
+DECLARE
+  key_ref_                   VARCHAR2(200)    := :KEY_REF;
+  reported_scrap_qty_        NUMBER           := :REPORTED_SCRAP_QTY;
+  scrap_reason_              VARCHAR2(30)     := :SCRAP_REASON;
+  note_text_                 VARCHAR2(1000)   := :NOTE_TEXT;
+  
+  islem_tipi_                 VARCHAR2(1000)   := :ISLEM_TIPI;
+  bilesen_                 VARCHAR2(1000)   := :BILESEN;
+  bilesen_malzeme_                 VARCHAR2(1000)   := :BILESEN_MALZEME;
+  new_record_                    BOOLEAN;
+  attr_                      VARCHAR2(4000);
+  objid_                      VARCHAR2(4000);
+  objversion_                      VARCHAR2(4000);
+  info1_  VARCHAR2(1000);
+  newrec_                        INVENTORY_PART_IN_STOCK_TAB%ROWTYPE;
+
+
+  TYPE Indicator_Rec IS RECORD
+  (contract                       BOOLEAN := FALSE,
+   part_no                        BOOLEAN := FALSE,
+   configuration_id               BOOLEAN := FALSE,
+   location_no                    BOOLEAN := FALSE,
+   lot_batch_no                   BOOLEAN := FALSE,
+   serial_no                      BOOLEAN := FALSE,
+   eng_chg_level                  BOOLEAN := FALSE,
+   waiv_dev_rej_no                BOOLEAN := FALSE,
+   activity_seq                   BOOLEAN := FALSE,
+   handling_unit_id               BOOLEAN := FALSE,
+   avg_unit_transit_cost          BOOLEAN := FALSE,
+   count_variance                 BOOLEAN := FALSE,
+   expiration_date                BOOLEAN := FALSE,
+   freeze_flag                    BOOLEAN := FALSE,
+   last_activity_date             BOOLEAN := FALSE,
+   last_count_date                BOOLEAN := FALSE,
+   location_type                  BOOLEAN := FALSE,
+   qty_in_transit                 BOOLEAN := FALSE,
+   qty_onhand                     BOOLEAN := FALSE,
+   qty_reserved                   BOOLEAN := FALSE,
+   receipt_date                   BOOLEAN := FALSE,
+   source                         BOOLEAN := FALSE,
+   warehouse                      BOOLEAN := FALSE,
+   bay_no                         BOOLEAN := FALSE,
+   row_no                         BOOLEAN := FALSE,
+   tier_no                        BOOLEAN := FALSE,
+   bin_no                         BOOLEAN := FALSE,
+   availability_control_id        BOOLEAN := FALSE,
+   create_date                    BOOLEAN := FALSE,
+   rotable_part_pool_id           BOOLEAN := FALSE,
+   project_id                     BOOLEAN := FALSE,
+   catch_qty_in_transit           BOOLEAN := FALSE,
+   catch_qty_onhand               BOOLEAN := FALSE,
+   part_ownership                 BOOLEAN := FALSE,
+   owning_customer_no             BOOLEAN := FALSE,
+   owning_vendor_no               BOOLEAN := FALSE,
+   latest_transaction_id          BOOLEAN := FALSE);
+
+  indrec_                        Indicator_Rec;
+  part_catalog_rec_          Part_Catalog_API.Public_Rec;
+  local_to_part_catalog_rec_ Part_Catalog_API.Public_Rec;
+
+
+  
+  current_employee_id_       VARCHAR2(50);
+  
+  info_                      VARCHAR2(2000);
+  close_operation_db_        VARCHAR2(5):= 'FALSE';
+  receive_location_no_       VARCHAR2(100);
+  receive_with_backflush_    VARCHAR2(5):='NO';
+  auto_receive_db_           VARCHAR2(5):='FALSE';
+  qty_to_receive_            NUMBER;
+  stop_time_db_              VARCHAR2(5):='FALSE';
+  finish_time_               DATE := NULL;
+  expiration_date_           DATE;
+BEGIN
+  FOR rec_ IN (SELECT CONTRACT,
+                      COMPANY,
+                      WORK_CENTER_NO,
+                      ORDER_NO,
+                      RELEASE_NO,
+                      SEQUENCE_NO,
+                      OPERATION_NO,
+                      OPERATION_DESCRIPTION,
+                      OP_ID,
+                      OP_SEQUENCE_NO,
+                      PART_NO
+                 FROM IFSAPP.SO_OPER_DISPATCH_LIST
+                WHERE key_ref_ LIKE '%-' || (ORDER_NO || '-'||RELEASE_NO||'-'||SEQUENCE_NO||'-'||OPERATION_NO))  
+  LOOP
+      IF bilesen_ = 'Bilesen' THEN 
+          NULL;
+      ELSE
+          bilesen_malzeme_ := rec_.PART_NO;
+      END IF;
+      part_catalog_rec_      := Part_Catalog_API.Get(bilesen_malzeme_);
+      local_to_part_catalog_rec_ := part_catalog_rec_;
+      --local_to_part_catalog_rec_ := INVENTORY_PART_IN_STOCK_API.Get_Part_Catalog_Rec___(bilesen_malzeme_, part_catalog_rec_); 
+      IF  islem_tipi_ = 'HURDA' THEN
+        IFSAPP.SHOP_ORDER_OPERATION_API.Modify_Op_Scrap__(info_                     => info_,
+                                                         order_no_                 => rec_.order_no,
+                                                         release_no_               => rec_.release_no,
+                                                         sequence_no_              => rec_.sequence_no,
+                                                         operation_no_             => rec_.operation_no,
+                                                         reported_scrap_           => reported_scrap_qty_,
+                                                         reported_scrap_catch_qty_ => NULL,
+                                                         scrap_reason_             => scrap_reason_,
+                                                         scrap_note_text_          => note_text_,
+                                                         client_transaction_type_  => 'REPORT',
+                                                         from_dispatch_list_       => 'TRUE',
+                                                         company_                  => rec_.company,
+                                                         current_employee_id_      => current_employee_id_,
+                                                         current_team_id_          => NULL);
+
+                                                             
+         IF (INVENTORY_PART_IN_STOCK_API.Exists(rec_.contract,
+                             bilesen_malzeme_,
+                             '*',
+                             'HURDA',
+                             '*',
+                             '*',
+                             '1',
+                             '*',
+                             0,
+                             0)) THEN
+                       new_record_ := FALSE;
+         ELSE
+           new_record_ := TRUE;
+         END IF;
+                                                        
+         Client_SYS.Clear_Attr(attr_);
+         IF new_record_ = TRUE THEN
+             Client_SYS.Add_To_Attr('CONTRACT'        , rec_.contract           , attr_);
+             Client_SYS.Add_To_Attr('PART_NO'         , bilesen_malzeme_            , attr_);
+             Client_SYS.Add_To_Attr('CONFIGURATION_ID', '*'      , attr_);
+             Client_SYS.Add_To_Attr('LOCATION_NO'     , 'HURDA'        , attr_);
+             Client_SYS.Add_To_Attr('LOT_BATCH_NO'    , '*'       , attr_);
+             Client_SYS.Add_To_Attr('SERIAL_NO'       , '*', attr_);
+             Client_SYS.Add_To_Attr('ENG_CHG_LEVEL'   , '1'      , attr_);
+             Client_SYS.Add_To_Attr('WAIV_DEV_REJ_NO' , '*'    , attr_);
+             Client_SYS.Add_To_Attr('ACTIVITY_SEQ'    , 0       , attr_);
+             Client_SYS.Add_To_Attr('HANDLING_UNIT_ID', 0   , attr_);
+             Client_SYS.Add_To_Attr('QTY_ONHAND', reported_scrap_qty_, attr_);
+             Client_SYS.Add_To_Attr('CATCH_QTY_ONHAND', reported_scrap_qty_, attr_);
+             Client_SYS.Add_To_Attr( 'COUNT_VARIANCE'       , 0, attr_);
+             Client_SYS.Add_To_Attr( 'QTY_RESERVED'         , 0, attr_);
+             Client_SYS.Add_To_Attr( 'QTY_IN_TRANSIT'       , 0, attr_);
+             Client_SYS.Add_To_Attr( 'AVG_UNIT_TRANSIT_COST', 0, attr_);
+             Client_SYS.Add_To_Attr( 'FREEZE_FLAG'          , Inventory_Part_Freeze_Code_API.Decode('N'), attr_);
+             newrec_ := NULL; -- For safety reasons...
+             --INVENTORY_PART_IN_STOCK_API.Unpack___(newrec_, indrec_, attr_);
+             --INVENTORY_PART_IN_STOCK_API.Check_Insert___(newrec_, indrec_, attr_, local_to_part_catalog_rec_);
+             --INVENTORY_PART_IN_STOCK_API.Insert___(objid_                        => objid_,
+             --          objversion_                   => objversion_,
+             --          newrec_                       => newrec_,
+             --          attr_                         => attr_,
+             --          set_default_avail_control_id_ => FALSE,
+             --          validate_hu_struct_position_  => validate_hu_struct_position_);
+       --inventory_part_in_stock_api.New__(info1_,objid_,objversion_,attr_,'PREPARE');
+       --error_sys.system_general(attr_);
+       inventory_part_in_stock_api.New__(info1_,objid_,objversion_,attr_,'DO');
+         ELSE
+              FOR recstock_ IN (SELECT * FROM INVENTORY_PART_IN_STOCK WHERE CONTRACT = rec_.contract AND PART_NO = bilesen_malzeme_ 
+                                         AND CONFIGURATION_ID = '*' AND LOCATION_NO = 'HURDA' AND LOT_BATCH_NO = '*' AND SERIAL_NO = '*' 
+                                         AND ENG_CHG_LEVEL = '1' AND WAIV_DEV_REJ_NO = '*' AND ACTIVITY_SEQ = 0 AND HANDLING_UNIT_ID = 0) LOOP
+                  UPDATE  INVENTORY_PART_IN_STOCK_TAB SET QTY_ONHAND = recstock_.QTY_ONHAND + reported_scrap_qty_ 
+                  where to_char(rowversion,'YYYYMMDDHH24MISS') = recstock_.objversion and rowid = recstock_.objid;
+                                         
+              END LOOP;
+                                                     
+          END IF; 
+                                                        
+      ELSIF islem_tipi_ = 'IADE' THEN
+        IFSAPP.SHOP_ORDER_OPERATION_API.Modify_Op_Scrap__(info_                     => info_,
+                                                         order_no_                 => rec_.order_no,
+                                                         release_no_               => rec_.release_no,
+                                                         sequence_no_              => rec_.sequence_no,
+                                                         operation_no_             => rec_.operation_no,
+                                                         reported_scrap_           => reported_scrap_qty_,
+                                                         reported_scrap_catch_qty_ => NULL,
+                                                         scrap_reason_             => scrap_reason_,
+                                                         scrap_note_text_          => note_text_,
+                                                         client_transaction_type_  => 'REPORT',
+                                                         from_dispatch_list_       => 'TRUE',
+                                                         company_                  => rec_.company,
+                                                         current_employee_id_      => current_employee_id_,
+                                                         current_team_id_          => NULL);
+                                                         
+        IF (INVENTORY_PART_IN_STOCK_API.Exists(rec_.contract,
+                             bilesen_malzeme_,
+                             '*',
+                             'IADE',
+                             '*',
+                             '*',
+                             '1',
+                             '*',
+                             0,
+                             0)) THEN
+                       new_record_ := FALSE;
+         ELSE
+           new_record_ := TRUE;
+         END IF;
+                                                        
+         Client_SYS.Clear_Attr(attr_);
+          IF new_record_ = TRUE THEN
+             Client_SYS.Add_To_Attr('CONTRACT'        , rec_.contract           , attr_);
+             Client_SYS.Add_To_Attr('PART_NO'         , bilesen_malzeme_            , attr_);
+             Client_SYS.Add_To_Attr('CONFIGURATION_ID', '*'      , attr_);
+             Client_SYS.Add_To_Attr('LOCATION_NO'     , 'IADE'        , attr_);
+             Client_SYS.Add_To_Attr('LOT_BATCH_NO'    , '*'       , attr_);
+             Client_SYS.Add_To_Attr('SERIAL_NO'       , '*', attr_);
+             Client_SYS.Add_To_Attr('ENG_CHG_LEVEL'   , '1'      , attr_);
+             Client_SYS.Add_To_Attr('WAIV_DEV_REJ_NO' , '*'    , attr_);
+             Client_SYS.Add_To_Attr('ACTIVITY_SEQ'    , 0       , attr_);
+             Client_SYS.Add_To_Attr('HANDLING_UNIT_ID', 0   , attr_);
+             Client_SYS.Add_To_Attr('QTY_ONHAND', reported_scrap_qty_, attr_);
+             Client_SYS.Add_To_Attr('CATCH_QTY_ONHAND', reported_scrap_qty_, attr_);
+             Client_SYS.Add_To_Attr( 'COUNT_VARIANCE'       , 0, attr_);
+             Client_SYS.Add_To_Attr( 'QTY_RESERVED'         , 0, attr_);
+             Client_SYS.Add_To_Attr( 'QTY_IN_TRANSIT'       , 0, attr_);
+             Client_SYS.Add_To_Attr( 'AVG_UNIT_TRANSIT_COST', 0, attr_);
+             Client_SYS.Add_To_Attr( 'FREEZE_FLAG'          , Inventory_Part_Freeze_Code_API.Decode('N'), attr_);
+             
+             newrec_ := NULL; -- For safety reasons...
+             --INVENTORY_PART_IN_STOCK_API.Unpack___(newrec_, indrec_, attr_);
+             --INVENTORY_PART_IN_STOCK_API.Check_Insert___(newrec_, indrec_, attr_, local_to_part_catalog_rec_);
+             --INVENTORY_PART_IN_STOCK_API.Insert___(objid_                        => objid_,
+             --          objversion_                   => objversion_,
+             --          newrec_                       => newrec_,
+             --          attr_                         => attr_,
+             --          set_default_avail_control_id_ => FALSE,
+             --          validate_hu_struct_position_  => validate_hu_struct_position_);
+       --inventory_part_in_stock_api.New__(info1_,objid_,objversion_,attr_,'PREPARE');
+       inventory_part_in_stock_api.New__(info1_,objid_,objversion_,attr_,'DO');
+          ELSE
+              FOR recstock_ IN (SELECT * FROM INVENTORY_PART_IN_STOCK WHERE CONTRACT = rec_.contract AND PART_NO = bilesen_malzeme_ 
+                                         AND CONFIGURATION_ID = '*' AND LOCATION_NO = 'IADE' AND LOT_BATCH_NO = '*' AND SERIAL_NO = '*' 
+                                         AND ENG_CHG_LEVEL = '1' AND WAIV_DEV_REJ_NO = '*' AND ACTIVITY_SEQ = 0 AND HANDLING_UNIT_ID = 0) LOOP
+                  UPDATE  INVENTORY_PART_IN_STOCK_TAB SET QTY_ONHAND = recstock_.QTY_ONHAND + reported_scrap_qty_ 
+                  where to_char(rowversion,'YYYYMMDDHH24MISS') = recstock_.objversion and rowid = recstock_.objid;
+                                         
+              END LOOP;
+                                                     
+          END IF;                                                  
+        
+      ELSIF islem_tipi_ = 'YENIDEN_ISLEME' THEN
+        IFSAPP.SHOP_ORDER_OPERATION_API.Modify_Op_Scrap__(info_                     => info_,
+                                                         order_no_                 => rec_.order_no,
+                                                         release_no_               => rec_.release_no,
+                                                         sequence_no_              => rec_.sequence_no,
+                                                         operation_no_             => rec_.operation_no,
+                                                         reported_scrap_           => reported_scrap_qty_,
+                                                         reported_scrap_catch_qty_ => NULL,
+                                                         scrap_reason_             => scrap_reason_,
+                                                         scrap_note_text_          => note_text_,
+                                                         client_transaction_type_  => 'REPORT',
+                                                         from_dispatch_list_       => 'TRUE',
+                                                         company_                  => rec_.company,
+                                                         current_employee_id_      => current_employee_id_,
+                                                         current_team_id_          => NULL);
+        IF (INVENTORY_PART_IN_STOCK_API.Exists(rec_.contract,
+                             bilesen_malzeme_,
+                             '*',
+                             'YENIDEN_ISLEME',
+                             '*',
+                             '*',
+                             '1',
+                             '*',
+                             0,
+                             0)) THEN
+                       new_record_ := FALSE;
+         ELSE
+           new_record_ := TRUE;
+         END IF;
+                                                        
+         Client_SYS.Clear_Attr(attr_);
+          IF new_record_ = TRUE THEN
+             Client_SYS.Add_To_Attr('CONTRACT'        , rec_.contract           , attr_);
+             Client_SYS.Add_To_Attr('PART_NO'         , bilesen_malzeme_            , attr_);
+             Client_SYS.Add_To_Attr('CONFIGURATION_ID', '*'      , attr_);
+             Client_SYS.Add_To_Attr('LOCATION_NO'     , 'YENIDEN_ISLEME'        , attr_);
+             Client_SYS.Add_To_Attr('LOT_BATCH_NO'    , '*'       , attr_);
+             Client_SYS.Add_To_Attr('SERIAL_NO'       , '*', attr_);
+             Client_SYS.Add_To_Attr('ENG_CHG_LEVEL'   , '1'      , attr_);
+             Client_SYS.Add_To_Attr('WAIV_DEV_REJ_NO' , '*'    , attr_);
+             Client_SYS.Add_To_Attr('ACTIVITY_SEQ'    , 0       , attr_);
+             Client_SYS.Add_To_Attr('HANDLING_UNIT_ID', 0   , attr_);
+             Client_SYS.Add_To_Attr('QTY_ONHAND', reported_scrap_qty_, attr_);
+             Client_SYS.Add_To_Attr('CATCH_QTY_ONHAND', reported_scrap_qty_, attr_);
+             Client_SYS.Add_To_Attr( 'COUNT_VARIANCE'       , 0, attr_);
+             Client_SYS.Add_To_Attr( 'QTY_RESERVED'         , 0, attr_);
+             Client_SYS.Add_To_Attr( 'QTY_IN_TRANSIT'       , 0, attr_);
+             Client_SYS.Add_To_Attr( 'AVG_UNIT_TRANSIT_COST', 0, attr_);
+             Client_SYS.Add_To_Attr( 'FREEZE_FLAG'          , Inventory_Part_Freeze_Code_API.Decode('N'), attr_);
+             newrec_ := NULL; -- For safety reasons...
+             --INVENTORY_PART_IN_STOCK_API.Unpack___(newrec_, indrec_, attr_);
+             --INVENTORY_PART_IN_STOCK_API.Check_Insert___(newrec_, indrec_, attr_, local_to_part_catalog_rec_);
+             --INVENTORY_PART_IN_STOCK_API.Insert___(objid_                        => objid_,
+             --          objversion_                   => objversion_,
+             --          newrec_                       => newrec_,
+             --          attr_                         => attr_,
+             --          set_default_avail_control_id_ => FALSE,
+             --          validate_hu_struct_position_  => validate_hu_struct_position_);
+       --inventory_part_in_stock_api.New__(info1_,objid_,objversion_,attr_,'PREPARE');
+       inventory_part_in_stock_api.New__(info1_,objid_,objversion_,attr_,'DO');
+          ELSE
+              FOR recstock_ IN (SELECT * FROM INVENTORY_PART_IN_STOCK WHERE CONTRACT = rec_.contract AND PART_NO = bilesen_malzeme_ 
+                                         AND CONFIGURATION_ID = '*' AND LOCATION_NO = 'YENIDEN_ISLEME' AND LOT_BATCH_NO = '*' AND SERIAL_NO = '*' 
+                                         AND ENG_CHG_LEVEL = '1' AND WAIV_DEV_REJ_NO = '*' AND ACTIVITY_SEQ = 0 AND HANDLING_UNIT_ID = 0) LOOP
+                  UPDATE  INVENTORY_PART_IN_STOCK_TAB SET QTY_ONHAND = recstock_.QTY_ONHAND + reported_scrap_qty_ 
+                  where to_char(rowversion,'YYYYMMDDHH24MISS') = recstock_.objversion and rowid = recstock_.objid;
+                                         
+              END LOOP;
+                                                     
+          END IF;                                                  
+      ELSE
+        NULL;
+      END IF;
+          
+  
+     IFSAPP.SHOP_ORDER_OPERATION_API.Modify_Op_Scrap__(info_                     => info_,
+                                                       order_no_                 => rec_.order_no,
+                                                       release_no_               => rec_.release_no,
+                                                       sequence_no_              => rec_.sequence_no,
+                                                       operation_no_             => rec_.operation_no,
+                                                       reported_scrap_           => reported_scrap_qty_,
+                                                       reported_scrap_catch_qty_ => NULL,
+                                                       scrap_reason_             => scrap_reason_,
+                                                       scrap_note_text_          => note_text_,
+                                                       client_transaction_type_  => 'REPORT',
+                                                       from_dispatch_list_       => 'TRUE',
+                                                       company_                  => rec_.company,
+                                                       current_employee_id_      => current_employee_id_,
+                                                       current_team_id_          => NULL);
+  END LOOP;
+END;
+
+
+DECLARE
+
+key_ref_                     VARCHAR2(200)     := :KEY_REF;
+tool_id_                     VARCHAR2(250)     := :TOOL_ID;
+info_                        VARCHAR2(2000);
+objid_                       VARCHAR2(2000);
+objversion_                  VARCHAR2(2000);
+attr_                        VARCHAR2(2000);
+
+BEGIN
+  
+FOR rec_ IN (SELECT CONTRACT,
+                      COMPANY,
+                      WORK_CENTER_NO,
+                      ORDER_NO,
+                      RELEASE_NO,
+                      SEQUENCE_NO,
+                      OPERATION_NO,
+                      OPERATION_DESCRIPTION,
+                      OP_ID,
+                      OP_SEQUENCE_NO,
+                      PART_NO
+                 FROM IFSAPP.SO_OPER_DISPATCH_LIST
+                WHERE key_ref_ LIKE '%-' || (ORDER_NO || '-'||RELEASE_NO||'-'||SEQUENCE_NO||'-'||OPERATION_NO))  
+  LOOP
+    Client_Sys.Add_To_Attr('ORDER_NO', rec_.order_no, attr_);
+    Client_Sys.Add_To_Attr('RELEASE_NO', rec_.release_No, attr_);
+    Client_Sys.Add_To_Attr('SEQUENCE_NO', rec_.sequence_no, attr_);
+    Client_Sys.Add_To_Attr('OPERATION_NO', rec_.operation_no, attr_);
+    Client_Sys.Add_To_Attr('CONTRACT', rec_.contract, attr_);
+    Client_Sys.Add_To_Attr('TOOL_ID', tool_id_, attr_);
+    Client_Sys.Add_To_Attr('TOOL_QUANTITY', '1', attr_);
+    Client_Sys.Add_To_Attr('REC_ADD_FROM_CLIENT', 'TRUE', attr_);
+    IFSAPP.SHOP_ORDER_OPER_TOOL_API.NEW__(info_,objid_,objversion_,attr_,'DO');
+    
+  END LOOP;
+END;    

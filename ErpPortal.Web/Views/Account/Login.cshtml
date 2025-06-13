@@ -1,0 +1,41 @@
+﻿@model ErpPortal.Web.Models.LoginViewModel
+
+@{
+    ViewData["Title"] = "Giriş";
+}
+
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div>
+            <h2 class="mt-6 text-center text-3xl font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-transparent bg-clip-text">
+                MZD Portal Giriş
+            </h2>
+        </div>
+        <form asp-action="Login" asp-controller="AccountUi" method="post" class="mt-8 space-y-6">
+            <div asp-validation-summary="ModelOnly" class="text-red-600 text-sm text-center"></div>
+            
+            <div class="rounded-md shadow-sm -space-y-px">
+                <div>
+                    <label asp-for="Username" class="sr-only">Kullanıcı Adı</label>
+                    <input asp-for="Username" class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Kullanıcı Adı" required />
+                    <span asp-validation-for="Username" class="text-red-600 text-sm"></span>
+                </div>
+                <div>
+                    <label asp-for="Password" class="sr-only">Şifre</label>
+                    <input asp-for="Password" type="password" class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" placeholder="Şifre" required />
+                    <span asp-validation-for="Password" class="text-red-600 text-sm"></span>
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Giriş Yap
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

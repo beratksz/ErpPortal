@@ -1,0 +1,128 @@
+﻿@using ErpPortal.Domain.Entities
+@model IEnumerable<ErpPortal.Domain.Entities.ShopOrderOperation>
+
+@{
+    ViewData["Title"] = $"İş Emirleri - {ViewBag.WorkCenter}";
+}
+
+<style>
+    /* Durum renkleri (Tailwind renkleri kullanıldı) */
+    .status-planned          { background-color: #e5e7eb; }
+    .status-released         { background-color: #bfdbfe; }
+    .status-setupstarted     { background-color: #fef08a; }
+    .status-setupcomplete    { background-color: #fdba74; }
+    .status-inprocess        { background-color: #bbf7d0; }
+    .status-partiallyreported{ background-color: #86efac; }
+    .status-interruption     { background-color: #fecaca; }
+    .status-closed           { background-color: #d9f99d; }
+    .status-cancelled        { background-color: #e5e7eb; }
+    .status-parked           { background-color: #e9d5ff; }
+
+    /* Küçük yardımcı buton stili */
+    .btn { color:#fff; font-size:0.75rem; font-weight:600; padding:0.25rem 0.5rem; border-radius:0.25rem; display:inline-block; }
+    .btn-green { background-color: #16a34a; }
+    .btn-amber { background-color: #d97706; }
+    .btn-red   { background-color: #dc2626; }
+    .btn-blue  { background-color: #2563eb; }
+    .btn-gray  { background-color: #6b7280; }
+</style>
+
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
+    <h1 class="text-xl font-semibold text-gray-800">@ViewData["Title"]</h1>
+
+    <div class="flex items-center space-x-4">
+        <!-- İş Merkezi Seçimi -->
+        <form asp-action="SelectWorkCenter" method="post" class="flex items-center space-x-2">
+            @Html.AntiForgeryToken()
+            <select name="workCenter" class="border border-gray-300 rounded px-2 py-1 text-sm">
+                @foreach (var wc in (IEnumerable<WorkCenter>)ViewBag.WorkCenters ?? Enumerable.Empty<WorkCenter>())
+                {
+                    if (wc.Code == (string)ViewBag.WorkCenter)
+                    {
+                        <option value="@wc.Code" selected>@wc.Name (@wc.Code)</option>
+                    }
+                    else
+                    {
+                        <option value="@wc.Code">@wc.Name (@wc.Code)</option>
+                    }
+                }
+            </select>
+            <button type="submit" class="btn btn-blue">Seç</button>
+        </form>
+
+        <span class="text-sm text-gray-700">Kullanıcı: <strong>@ViewBag.UserName</strong></span>
+
+        <form asp-controller="AccountUi" asp-action="Logout" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-red">Çıkış Yap</button>
+        </form>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-3 mb-4 text-sm" role="alert">
+        @TempData["SuccessMessage"]
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 mb-4 text-sm" role="alert">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+@if (!Model.Any())
+{
+    <div class="bg-blue-50 text-blue-700 p-4 rounded-md text-sm">
+        Bu iş merkezi için gösterilecek aktif iş emri bulunmamaktadır veya henüz senkronize edilmemiştir.
+        Veriler periyodik olarak senkronize edilmektedir.
+    </div>
+}
+else
+{
+    <div class="overflow-x-auto bg-white shadow rounded-lg">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-800 text-white">
+                <tr>
+                    <th class="px-3 py-2 text-left">Sipariş No</th>
+                    <th class="px-3 py-2 text-left">Operasyon No</th>
+                    <th class="px-3 py-2 text-left">Açıklama</th>
+                    <th class="px-3 py-2 text-left">Parça No</th>
+                    <th class="px-3 py-2 text-left">Durum</th>
+                    <th class="px-3 py-2 text-center">Hedef</th>
+                    <th class="px-3 py-2 text-center">Tamamlanan</th>
+                    <th class="px-3 py-2 text-center">Hurda</th>
+                    <th class="px-3 py-2 text-center">Plan. Başlangıç</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                @foreach (var item in Model)
+                {
+                    string statusClass = "status-" + item.OperStatusCode?.ToLowerInvariant().Replace(" ", "");
+                    <tr class="@statusClass hover:bg-gray-100">
+                        <td class="px-3 py-2 whitespace-nowrap">@item.OrderNo</td>
+                        <td class="px-3 py-2 whitespace-nowrap">
+                            <a asp-controller="ShopOrderOperations" asp-action="Detail" asp-route-orderNo="@item.OrderNo" asp-route-operationNo="@item.OperationNo" class="text-indigo-600 hover:underline">
+                                @item.OperationNo
+                            </a>
+                        </td>
+                        <td class="px-3 py-2">@item.OperationDescription</td>
+                        <td class="px-3 py-2">@item.PartNo</td>
+                        <td class="px-3 py-2">
+                            <span class="text-xs font-medium">@item.OperStatusCode</span>
+                            @if (item.IsSyncPending)
+                            {
+                                <span class="ml-1 text-amber-700 text-xs font-medium" title="API ile senkronizasyon bekleniyor. Son hata: @item.LastSyncError">(Bekliyor)</span>
+                            }
+                        </td>
+                        <td class="px-3 py-2 text-center">@item.RevisedQtyDue</td>
+                        <td class="px-3 py-2 text-center">@item.QtyComplete</td>
+                        <td class="px-3 py-2 text-center">@item.QtyScrapped</td>
+                        <td class="px-3 py-2 text-center">@item.OpStartDate.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

@@ -1,0 +1,22 @@
+@model ErpPortal.Web.Models.AssignWorkCentersViewModel
+@{
+    ViewData["Title"] = "İş Merkezi Atama";
+}
+<div class="max-w-xl mx-auto bg-white shadow-lg rounded-lg p-6">
+    <h2 class="text-xl font-bold mb-4">@Model.Username için İş Merkezleri</h2>
+    <form asp-action="Assign" method="post" class="space-y-4">
+        <input type="hidden" name="userId" value="@Model.UserId" />
+        <div class="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto pr-2">
+            @foreach(var wc in Model.WorkCenters){
+                <label class="inline-flex items-center space-x-2">
+                    <input type="checkbox" name="selectedWorkCenters" value="@wc.Id" @(wc.Selected?"checked":"") class="form-checkbox text-indigo-600">
+                    <span>@wc.Code - @wc.Name</span>
+                </label>
+            }
+        </div>
+        <div class="flex justify-end space-x-3">
+            <a asp-action="Index" class="px-4 py-2 bg-gray-500 text-white rounded">İptal</a>
+            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded">Kaydet</button>
+        </div>
+    </form>
+</div> 

@@ -1,0 +1,194 @@
+Operation No	Operation Description	Operation  Sequence No	Split From  Operation No	Op ID	Status	Operation Work  Type	Op Block ID	Work Center No	Work Center Description	Work Center Code	Preferred Resource	Scheduled Resource	Department	Department Description	Operation  Quantity	Mfg Factor	Labor Setup Time	Labor Factor	Mfg Setup Time	Qty Complete	Qty Scrapped	Remaining Qty	Op Qty Deviation	Queue Time	Scheduled Setup Time	Remaining Mfg Hours	Resource Share Per Unit	Resource Share	Remaining Resource Hours	Setup Labor Class No	Labor Class	Crew Size	Setup Crew Size	Emp Setup Qual Profile	Setup Qual Profile Name	Setup Assigned	Emp Qual Profile	Qual  Profile Name	Remaining Labor Hours	Remaining Man Hours	Runtime Assigned	Transport Time	Factor Unit	Parallel Operation	Efficiency Factor	Overlap	Overlap Unit	Include Setup Time in  Overlap	Schedule Direction	Start Date	Finish Date	Outside Op Item	Outside Op Supply Type	Outside Op Backflush	Outside Qty Shipped	Outside Op Notes	Send To Next  Supplier	Outside Op Complete	Schedule Capacity	CBS Queue Time	CBS Scheduled	Scheduling Information	Interruption Cause	Interruption Cause Description	Milestone Operation	Increase Lot Size On Scrap	Work Guideline	Notes	Group By Note	Machine No	Document Text	Reference Number	Reference Type	Type Description
+50	Paketleme Operasyonu	50		885	Closed	Normal		WC2	Depo İstasyonu	Internal work center					5	0	0	0,5	0	0	0	0	-5	0		0		1	0	20	20	1	1			FALSE			0	0	FALSE	0	Hours/Unit	Not parallel	100	0	Units	N	Backwards Scheduling	26.09.2024 17:45	26.09.2024 17:45		Purchase Requisition	Disallowed	0		FALSE	N	Infinite capacity		Infinite Scheduled				FALSE	FALSE	N	Unknown			0			
+"Operation No
+The number of the operation. This information is taken from the operation list of the part you entered when you entered the part structure. The adjacent column shows a description of the operation."	"Operation Description
+A description of the work to be performed for the operation.
+"	"Operation  Sequence No
+The sequence of the operation. Operations are sequenced primarily with the operation sequence and  secondarily with the operation number. The value can be updated, but if the operation is split, the update can only be performed by using adjust.
+"	"Split From  Operation No
+The source operation number of the split operation.
+"	"Op ID
+This is the unique operation ID (barcode ID) of the operation. Each operation receives a unique operation ID when the shop order is created.
+"	"Status
+The current status of the operation. Possible statuses for operations are: 
+
+Planned - Operation not yet released. It is not possible to report on planned operations.
+Released - Operation ready to start.
+Setup Started - Operation setup started.
+Setup Completed - Operation setup completed.
+In Process - Work is currently ongoing on the operation.
+Partially reported - Runtime and/or quantity has been reported on the operation, but not finished. Can be reported on.
+Interruption - Operation clocking has been stopped with the stop reason Interrupted. However, further reporting of the operation is allowed by methods other than by operation clocking.
+Parked - Shop order is parked.
+Cancelled - Shop order is cancelled.
+Closed - Operation completed. Closed operations can only be reopened.
+"	"Operation Work  Type
+Indicates the type of work the operation represents. Possible values are:
+Normal - Represents work originally planned for the shop order.
+Non Routine - Represent additional work added to an already started shop order.
+Rework - Represents additional work needed to address a problem detected with the work performed on a preceding operation.
+"	"Op Block ID
+The identifier of the operation block which to the operation is connected. This value is generated automatically when a new operation block is created and cannot be modified. The value consists of a prefix as defined in the Character and Numeric Value Default window with an incremental number.
+"	"Work Center No
+The short code of the work center.
+"	"Work Center Description
+The description of the work center.
+"	"Work Center Code
+Indicates whether this is an internal or external work center, as defined in Work Center.
+"	"Preferred Resource
+The resource which you wish to use to perform the operation. If an operation is started using a particular resource, the resource  will automatically be selected as the preferred resource. When you modify the preferred resource, if it is not equal to the scheduled resource, the operation will be rescheduled. (For CBS sites the value for the preferred resource will be Null).
+"	"Scheduled Resource
+The resource which is planned to be used for the operation.
+"			"Operation  Quantity
+The quantity to be completed by the operation. The value can differ from the lot size if split operations exist or operation scrap has been reported in previous operations. If the Adjust on Op Qty Deviation check box is selected, this value will also be adjusted when an operation is over/under reported.
+"	"Mfg Factor
+The manufacturing factor. This value, together with the factor unit, indicates the time required to use the machines or equipment for this operation. Updating this value does not change the routing operation that created this operation.
+"	"Labor Setup Time
+The setup time for the labor activity performed on this operation.
+"	"Labor Factor
+This value, together with the factor unit, indicates the time required for labor in this operation. Updating this value does not change the routing operation that created this operation.
+"	"Mfg Setup Time
+The machine or equipment setup time needed before the operation can start. This information is retrieved from the operation list that you entered when you created the routing for the ordered part in the Routing window.
+"	"Qty Complete
+The quantity of the parts completed by the operation. You cannot update this value; it is handled automatically when quantity is reported.
+"	"Qty Scrapped
+The quantity reported as scrapped for this operation.
+"	"Remaining Qty
+The remaining quantity to manufacture in the operation. You cannot update this column. The quantity is automatically reduced when you report the operation.
+"	"Op Qty Deviation
+Deviation between the actual completed and scrapped quantities relative to the planned operation quantity. A positive operation deviation is created when an operation is over reported. A negative operation deviation is created when an operation is closed with the quantity reported which is less than planned. This value affects the operation quantity of the succeeding operations and the remaining net supply of the shop order.
+"	"Queue Time
+The number of hours that this operation is scheduled to wait in queue before being processed. This value is used by the Shop Order Infinite Scheduler and also in lead time calculations. It is based on the work center calendar. This value is not taken into account if the operation is scheduled using Constraint Based Scheduling.
+"		"Remaining Mfg Hours
+The duration of the machine time remaining for the operation. You cannot update this value manually. It is reduced automatically when you report machine time or quantity on the operation. The Base Remaining Hours On setting on the connected work center controls how reported time and quantity will affect the calculation of the remaining time. 
+If the factor unit of the operation is hours, it is reduced when the machine time is reported.
+"	"Resource Share Per Unit
+This indicates how big share per produced unit of the capacity of a work center resource the operation will utilize during its duration. The value entered must be higher than 0 and not higher than 1. If 0.1 is entered and the order quantity is 5 this means the operation will utilize 50% of the resource capacity during its duration. The cost and load of both machine setup and runtime of the operation is affected by this value.
+
+A resource share per unit is normally used for operations where the runtime is not lot size dependent (Factor Unit = Hours).
+"	"Resource Share
+This indicates how big share of the capacity of a work center resource the operation will utilize during its duration.  The value entered must be higher than 0 and not higher than 1. If 0.5 is entered this means the operation will utilize 50% of the resource capacity during its duration. If a value for Resource Share per Unit has been entered this value is calculated as Resource Share per Unit * Quantity and cannot be manually updated. The cost and load of both machine setup and runtime of the operation is affected by this value.
+
+
+"	"Remaining Resource Hours
+The sum of machine setup and runtime considering the resource share remaining for the operation. Calculated as: Remaining Machine Time * Resource Share.
+"	"Setup Labor Class No
+The identity of the labor class that is assigned to set up the operation. A value in this field is optional unless the labor setup time is greater than zero.
+"	"Labor Class
+The labor class to which the labor operation belongs.
+"	"Crew Size
+The crew size of the operation. This information is retrieved from the operation list that you entered when you created the routing for the ordered part in the Routing page. If you change this value, only the specified shop order will be affected.
+"	"Setup Crew Size
+The number of people required to set up the operation. A value in this field is optional unless the labor setup time is greater than zero.
+"	"Emp Setup Qual Profile
+The qualification profile that an employee should have, in order to be able to perform the operation setup in shop floor workbench.
+"	"Setup Qual Profile Name
+The name of the setup qualification profile.
+"	"Setup Assigned
+If selected, it indicates that there are employees assigned to perform the operation setup. The assigned employees are only suggestions and therefore it is possible for other employees to perform the work.
+"	"Emp Qual Profile
+The qualification profile that an employee should have, in order to be able to perform the operation in shop floor workbench.
+"	"Qual  Profile Name
+The name of the qualification profile.
+"	"Remaining Labor Hours
+The time remaining for the labor operation. You cannot update this value manually. It is reduced automatically when you report labor time or quantity on the operation. The Base Remaining Hours On setting on the connected work center controls how reported time and quantity will affect the calculation of remaining time.
+ If the factor unit of the operation is hours, it is reduced when the labor time is reported.
+"	"Remaining Man Hours
+Remaining labor time in man hours. Calculated as;
+(Remaining Labor Time x Planned Crew Size on the operation)
+"	"Runtime Assigned
+If selected, it indicates that there are employees assigned to perform the operation. The assigned employees are only suggestions and therefore it is possible for other employees to perform the work.
+"	"Transport Time
+The time it takes to transport material from this operation. This field is required, and the default value is 0 (zero). The value for transport time must be 0 or greater. The shop order loader schedules transport time using the site manufacturing calendar. When using CBS, this time is scheduled based on the site transport calendar or a 24 hour calendar.
+"	"Factor Unit
+Designates how machine factor and labor factor are used.Possible values are:
+
+Hours/Unit - How many hours it takes to manufacture a unit. 
+Units/Hour - How many units can be manufactured in an hour. 
+Hours - How many hours the manufacturing process takes, regardless of the number of units.
+
+
+
+"	"Parallel Operation
+Indicates whether the operation can be scheduled at the same time as the preceding non-parallel operation. Possible values are Parallel and Not Parallel.
+"	"Efficiency Factor
+The operation efficiency affects only the runtime, not the setup time. When operation efficiency is set to less than 100%, the runtime of machine and labor of shop order operation increases. This results in an increased value for remaining manufacturing hours that could affect the scheduled start and/or finish dates of the operation. The standard cost of the operation also gets affected when operation efficiency changes. Operation efficiency of running operations can be changed to incorporate any performance changes into operation runtime, remaining manufacturing hours and for scheduling 
+
+"	"Overlap
+The overlap between the current routing operation (operation 2) and the previous routing operation (operation 1). The overlap represents the earliest point in routing operation 1, when the start of routing operation 2 can be scheduled. The overlap will be expressed either in units (number of units completed) or as a percentage (of the time it takes to perform the previous operation for the quantity due), based on the value in the Overlap Unit field. 
+"	"Overlap Unit
+Specify whether the overlap between the current routing operation and the previous routing operation is expressed in units or as a percentage of the time to complete the previous operation for the quantity due. The overlap represents the point in the previous routing operation when the start of the current routing operation can be scheduled. Possible values are: Units or Percent.
+"	"Include Setup Time in  Overlap
+Overlap represents the earliest point of a routing operation at which the start of a subsequent routing operation can be scheduled. If the check box is selected and the subsequent operation has a setup time, both setup and run time will be used in the overlap calculation. As a result, the setup time for the subsequent operation will be scheduled after the overlap time. If the check box is cleared, then only the run time of the subsequent operation will be used for the overlap calculation. As a result, the setup time of the subsequent operation can be scheduled before the operation overlap time.
+"	"Schedule Direction
+The scheduling direction of the shop order operation. When a shop order is scheduled the scheduling direction of the operations will be set according to the scheduling direction of the shop order. However you may manually change the scheduling direction of an operation to any of the below values:
+
+Backwards Scheduling - The operation and operations preceding the operation are backward scheduled from its finish date.
+Forward Scheduling - The operation and operations succeeding the operation are forward scheduled from its start date.
+Manual Scheduling - The operation is scheduled by manually defining its start and finish dates.
+"	"Start Date
+The date and time when the operation will start.
+"	"Finish Date
+The date on which each operation is scheduled to be finished.
+"	"Outside Op Item
+The ID of the purchased part used for receipt from the outside operation. This value applies only to outside work center operations. You can enter this value or select it from the List of Values.
+"	"Outside Op Supply Type
+For an outside operation, select the type of supply that will be created for the outside operation item when the operation is released.  The options are Purchase Requisition, Planned Purchase Order and Released Purchase Order.
+"	"Outside Op Backflush
+Specifies how much of the outside operation reporting process will be handled automatically. Possible values are: Disallowed, Ship Wip to Supplier and Purchase Order Arrival.
+"	"Outside Qty Shipped
+The quantity of the subassembly shipped to the outside processor or subcontractor.
+"	"Outside Op Notes
+User entered notes regarding the outside processing or subcontracting operation.
+"	"Send To Next  Supplier
+If this check box is selected, it indicates that the outside operation item should be directly sent from the supplier of the operation to the supplier of the succeeding operation, if the succeeding operation is also an outside operation. When this check box is selected for an outside operation having a succeeding outside operation, the delivery address of the purchase order line will be automatically updated from the company delivery address to the address of the supplier of the next operation. It has no effect when the next operation is an internal operation.
+"	"Outside Op Complete
+A check box indicating if the outside processing or subcontracting operation associated with the operation is complete.
+"	"Schedule Capacity
+The type of capacity used to schedule the shop order. Possible values are Infinite capacity and Finite capacity.
+"	"CBS Queue Time
+If the operation is scheduled by CBS, this is the number of hours that it needs to wait in queue before it is scheduled to start. This is calculated each time the operation is rescheduled. If the operation is CBS unscheduled, there will be no CBS queue time. This value is calculated as follows.
+
+For the first operation:
+If backward scheduled: Operation start time - Latest possible start time (LPST) of the shop order
+If forward scheduled: Operation start time - Earliest possible start time (EPST) of the shop order
+
+Other operations:
+Operation start time - End time of previous operation - Transport time of previous operation
+"		"Scheduling Information
+Additional information provided when the operation could not be scheduled or did not meet its need date, using the Advanced Planning Board (APB) or Constraint Based Scheduling (CBS).
+Either Work Center, Labor, Tools or Material are unavailable to schedule the operation.
+Tardy - the operation does not meet its Need Date.
+The operation has been unscheduled manually by the planner.
+There are not enough materials available to schedule the operation.
+One or more preceding operations are not scheduled.
+When a constraint does not have underlying resources. The Work Center, Labor Class or Manufacturing Tool ID will be identified in the message.
+Operation is incomplete in CBS/APB.
+Labor Run Factor or Machine Run Factor or Labor Setup or Machine Setup must be greater than 0. 
+"	"Interruption Cause
+A numerical identifier for the interruption cause. This value is mandatory when an operation is stopped with stop reason interrupted. 
+"	"Interruption Cause Description
+The description of the interruption cause. 
+"	"Milestone Operation
+If this check box is selected, it indicates that the operation is a milestone operation and it is not possible to report a larger quantity on succeeding operations than the quantity reported on the milestone operation.  Automatic reporting of milestone operations is not allowed, and therefore automatic  reporting at receipt is not allowed unless all milestone operations have been reported.
+Note: It is possible to cancel operation reporting of a milestone operation, even if succeeding operations are reported.
+"	"Increase Lot Size On Scrap
+If this check box is selected, when you report scrap on the operation, if the total operation scrap reported on the shop order exceeds the planned scrap, then the shop order lot size will be increased to compensate for the excessive scrap reported.
+"	"Work Guideline
+Indicates whether this record has a work guideline. Possible values are Yes and No.
+"	"Notes
+This is a free-text field of up to 2000 characters, in which you can enter any information. Notes are object-linked text, but they are never printed like document texts; instead they function as your own notes and comments for internal reference only. A note can be used as a means of forwarding information to someone who will process the object later. You can view and update the text in an editor reached by double-clicking in the field.
+"	"Group By Note
+Value entered in this free text field is used to sort operations in the shop floor workbench when the Dispatch Rule is set to Grouping.
+E.g.,  grouping the painting operations according to the color to be used in a painting work center.
+"	"Machine No
+The identifier for the machine number to which this operation is connected. This provides an additional level of granularity when a work center contains more than one machine. The value can be entered/modified in routing operation or in shop order operation.
+"	"Document Text
+If this check box is selected, document text exists for the norm. The document is a pre-formatted message or general phrase associated with the analysis type. To view the document text, choose Document Text from the right mouse button menu.
+"	"Reference Number
+A reference to a specific part of an instruction manual connected to an operation or a work guideline. This is a free-text field of up to 25 characters.
+"	"Reference Type
+The type of instruction manual reference connected to an operation or a work guideline. Only reference types defined in Instruction Manual Reference Type could be entered.
+"	"Type Description
+The description of the Reference Type.
+"

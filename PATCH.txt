@@ -1,0 +1,254 @@
+Authorizations:
+basicAuth
+path Parameters
+OrderNo
+required
+string <= 12 characters
+Example: It is a Text
+ReleaseNo
+required
+string <= 4 characters
+Example: It is a Text
+SequenceNo
+required
+string <= 4 characters
+Example: It is a Text
+OperationNo
+required
+number
+Example: 1
+header Parameters
+If-Match	
+string
+E-Tag
+
+Prefer	
+Array of strings
+Items Value: "return=minimal"
+Prefer: return=minimal
+
+Request Body schema: application/json
+request body for updating entity type ShopOrderOperation
+
+OperationDescription
+required
+string [ 1 .. 100 ] characters
+OpSequenceNo
+required
+number
+SplitFromOperationNo	
+number
+EfficiencyFactor
+required
+number
+MachRunFactor
+required
+number
+MachSetupTime
+required
+number
+MoveTime
+required
+number
+QueueTime
+required
+number
+CbsQueueTime	
+number
+LaborRunFactor
+required
+number
+LaborSetupTime
+required
+number
+CrewSize	
+number
+SetupCrewSize	
+number
+OpStartDate
+required
+string <date-time>
+OpFinishDate
+required
+string <date-time>
+RevisedQtyDue
+required
+number
+QtyComplete
+required
+number
+QtyScrapped
+required
+number
+MachineNo	
+string <= 15 characters
+NoteText	
+string <= 2000 characters
+SchedDirection
+required
+string (SchedDirection_Enumeration)
+Enum: "BackwardsScheduling" "ForwardScheduling" "ManualScheduling"
+OperStatusCode
+required
+string (OperStatusCode_Enumeration)
+Enum: "Planned" "Released" "SetupStarted" "SetupComplete" "InProcess" "PartiallyReported" "Interruption" "Closed" "Cancelled" "Parked"
+RunTimeCode
+required
+string (OperationTimeCode_Enumeration)
+Enum: "HoursUnit" "UnitsHour" "Hours"
+Contract
+required
+string [ 1 .. 5 ] characters
+WorkCenterNo
+required
+string [ 1 .. 5 ] characters
+PartNo
+required
+string [ 1 .. 25 ] characters
+LaborClassNo	
+string <= 10 characters
+SetupLaborClassNo	
+string <= 10 characters
+ParallelOperation
+required
+string (ParallelOperation_Enumeration)
+Enum: "Parallel" "NotParallel"
+OutsideQtyShipped	
+number
+OperationSchedStatus
+required
+string (OperationSchedStatus_Enumeration)
+Enum: "Unscheduled" "Scheduled" "InfiniteScheduled"
+SchedulingInformation	
+string <= 2000 characters
+ScheduledSetupTime	
+number
+OutsideOpComplete
+required
+boolean
+OutsideOpNotes	
+string <= 2000 characters
+OutsideOpBackflush
+required
+string (OutsideOpBackflush_Enumeration)
+Enum: "Disallowed" "ShipWIPToSupplier" "PurchaseOrderArrival"
+OutsideOpSupplyType
+required
+string (OutsideOpSupplyType_Enumeration)
+Enum: "PurchaseRequisition" "PlannedPurchaseOrder" "ReleasedPurchaseOrder"
+Overlap
+required
+number
+OverlapUnit
+required
+string (OperOverlapTimeCode_Enumeration)
+Enum: "Units" "Percent"
+OperationPriority	
+number
+MilestoneOperation
+required
+string (MilestoneOperation_Enumeration)
+Enum: "Milestone" "NotMilestone"
+IncreaseLotsizeOnScrap
+required
+boolean
+GroupByNote	
+string <= 40 characters
+ServiceType	
+string <= 25 characters
+IncludeSetupForOverlap
+required
+string (GenYesNo_Enumeration)
+Enum: "Yes" "No"
+CompProfileId	
+string <= 10 characters
+SetupCompProfileId	
+string <= 10 characters
+SendToNextSupplier
+required
+boolean
+PreferredResourceId	
+string <= 5 characters
+ResourceSharePerUnit	
+number
+FixedResourceShare	
+number
+OperationBlockId	
+string <= 12 characters
+OpQtyDeviation	
+number
+LatestWiRepNo	
+number
+OperationWorkType
+required
+string (OperationWorkType_Enumeration)
+Enum: "Normal" "NonRoutine" "Rework"
+ReferenceNumber	
+string <= 100 characters
+ReferenceType	
+string <= 25 characters
+ResourceShare	
+number
+IncludeSetupForOverlapDb
+required
+boolean
+OutsideOpItem	
+string
+SendToNextSupplierDb
+required
+boolean
+MilestoneOperationDb
+required
+boolean
+IncreaseLotsizeOnScrapDb
+required
+boolean
+ClientTransactionType	
+string <= 100 characters
+DemandCode	
+string (OrderSupplyType_Enumeration)
+Enum: "InventOrder" "ShopOrder" "PurchOrderTrans" "PurchOrderDir" "CustOrderTrans" "CustOrderDir" "WorkOrder" "NonInventory" "Pkg" "PurchOrder" "IntDemand" "IntPurchTrans" "IntPurchDir" "IntCustTrans" "IntCustDir" "ServiceOrder" "Project" "ProjectDelivery" "DOPOrder" "NotDecided" "PlantDesign" "SalesQuotation" "CTPReservation" "MaintRepairAndOverhaul" "InterimOrder" "AutomaticSourcing" "ProjectInventory" "DistributionOrder" "ProductionSchedule" "DistributionAllocation" "ComponentRepairOrder" "ServiceContract" "BusinessOpportunity" "ComponentRepairExchange" "ReplacementCustomerOrder" "ReplacementPurchaseOrder" "IntPurchReplacementOrder" "Pm" "ProjectDeliverables" "CostEstimation" "FieldServiceManagement" "DemandPlan"
+CroNo	
+number
+CroLineNo	
+number
+OperationAssignment	
+string
+OperStatusCodeDb	
+string
+OperStatusCodeValue	
+string
+WorkCenterCodeDb	
+string
+FiniteSchedulerInstalledNum	
+number
+RowState	
+string
+OperationReservation	
+string
+BomTypeText	
+string
+IncludeAsLoadDb	
+string
+SiteDate	
+string <date>
+OperationStartDate	
+string <date>
+OperationFinishDate	
+string <date>
+LaborClassNumbers	
+string
+SetupLabourClassNumbers	
+string
+ProductionLines	
+string
+DepartmentNumbers	
+string
+WorkCenterNumbers	
+string
+SoSchedDirection	
+string (SchedDirection_Enumeration)
+Enum: "BackwardsScheduling" "ForwardScheduling" "ManualScheduling"
+ObjectId	
+string
+Responses

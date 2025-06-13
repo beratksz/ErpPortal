@@ -1,0 +1,223 @@
+@model ErpPortal.Domain.Entities.ShopOrderOperation
+@{
+    ViewBag.Title = $"Operasyon Detayı {Model.OrderNo}/{Model.OperationNo}";
+    var userName = ViewBag.UserName as string ?? "";
+}
+
+<div class="max-w-5xl mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-4">
+        <div>
+            <a href="javascript:history.back()" class="text-indigo-600 hover:text-indigo-800 mr-2">← Geri</a>
+            <h3 class="text-xl font-semibold inline">@Model.OrderNo / @Model.OperationNo</h3>
+        </div>
+        <span class="text-sm text-gray-600 font-medium">Kullanıcı: @userName</span>
+    </div>
+
+    <!-- Bilgi Kartı -->
+    <div class="bg-white shadow rounded-lg mb-4 p-4 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+        <div>
+            <p class="text-gray-500">Durum</p>
+            <p>@Model.OperStatusCode</p>
+        </div>
+        <div>
+            <p class="text-gray-500">Parça</p>
+            <p>@Model.PartNo</p>
+        </div>
+        <div class="sm:col-span-1 md:col-span-1 lg:col-span-1">
+            <p class="text-gray-500">Açıklama</p>
+            <p>@Model.OperationDescription</p>
+        </div>
+    </div>
+
+    <!-- Miktar Kartı -->
+    <div class="bg-white shadow rounded-lg mb-4 p-4">
+        <div class="flex justify-around text-center mb-4">
+            <div>
+                <p class="text-gray-500 text-sm">Planlanan</p>
+                <p id="dueQty" class="text-2xl font-semibold">@Model.RevisedQtyDue</p>
+            </div>
+            <div>
+                <p class="text-gray-500 text-sm">Tamamlanan</p>
+                <p id="completeQty" class="text-2xl font-semibold text-green-600">@Model.QtyComplete</p>
+            </div>
+            <div>
+                <p class="text-gray-500 text-sm">Hurda</p>
+                <p id="scrapQty" class="text-2xl font-semibold text-red-600">@Model.QtyScrapped</p>
+            </div>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-4 mb-1">
+            <div id="progressBar" class="bg-green-500 h-4 rounded-full" style="width:0%"></div>
+        </div>
+        <div id="progressText" class="text-right text-xs font-medium">0%</div>
+    </div>
+
+    <!-- Sayaç -->
+    <div id="timerCard" class="hidden bg-gray-100 border border-gray-300 rounded p-3 mb-4 text-sm">
+        <span id="timerLabel" class="font-medium"></span>
+        <span id="timerValue" class="font-semibold ml-2">00:00:00</span>
+    </div>
+
+    <!-- Aksiyon Alanı -->
+    <div id="actionArea" class="mt-3"></div>
+
+    <!-- Modal Overlay -->
+    <div id="modalOverlay" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg w-80 p-6">
+            <h3 id="modalTitle" class="text-lg font-semibold mb-4">Başlık</h3>
+            <div class="space-y-3">
+                <div id="modalQtyGroup">
+                    <label for="modalQty" class="block text-sm font-medium text-gray-700">Miktar</label>
+                    <input id="modalQty" type="number" min="0" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                </div>
+                <div id="modalReasonGroup" class="hidden">
+                    <label for="modalReason" class="block text-sm font-medium text-gray-700">Sebep</label>
+                    <select id="modalReason" class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 mt-6">
+                <button id="modalCancel" class="px-4 py-2 bg-gray-400 text-white rounded">İptal</button>
+                <button id="modalConfirm" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded">Gönder</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script>
+    const orderNo = "@Model.OrderNo";
+    const opNo = @Model.OperationNo;
+
+    function loadDetails(){
+        $.getJSON(`/api/shoporder/operation/${orderNo}/${opNo}`, function(d){ render(d); });
+    }
+
+    function percent(comp, scrap, due){ return Math.min(100, ((comp+scrap)/due)*100); }
+
+    function render(det){
+        $("#completeQty").text(det.qtyComplete);
+        $("#scrapQty").text(det.qtyScrapped);
+        const pct = percent(det.qtyComplete, det.qtyScrapped, det.revisedQtyDue);
+        $("#progressBar").css("width", pct+"%");
+        $("#progressText").text(pct.toFixed(1)+"%");
+
+        // Timer
+        const status = (det.operStatusCode||'').toLowerCase();
+        let startUtc = null, label='';
+        if((status==='started'||status==='inprocess') && det.actualStartDate){ startUtc = det.actualStartDate; label='Geçen Süre'; }
+        if(status==='interruption' && det.lastInterruptionTime){ startUtc = det.lastInterruptionTime; label='Duruş Süresi'; }
+        if(startUtc){
+            $("#timerLabel").text(label);
+            $("#timerCard").removeClass('hidden');
+            const start = new Date(startUtc + 'Z');
+            setInterval(()=>{
+                const diff=Math.floor((Date.now()-start.getTime())/1000);
+                const h=String(Math.floor(diff/3600)).padStart(2,'0');
+                const m=String(Math.floor((diff%3600)/60)).padStart(2,'0');
+                const s=String(diff%60).padStart(2,'0');
+                $("#timerValue").text(`${h}:${m}:${s}`);
+            },1000);
+        }
+
+        // Action buttons (Tailwind styled)
+        const btn = (txt, type, id)=>{
+            let colorClasses = '';
+            switch(type){
+                case 'success': colorClasses = 'bg-green-600 hover:bg-green-700'; break;
+                case 'warning': colorClasses = 'bg-amber-600 hover:bg-amber-700'; break;
+                case 'danger': colorClasses = 'bg-red-600 hover:bg-red-700'; break;
+                case 'primary': colorClasses = 'bg-indigo-600 hover:bg-indigo-700'; break;
+                default: colorClasses = 'bg-gray-600 hover:bg-gray-700';
+            }
+            return `<button id="${id}" class="${colorClasses} text-white text-sm font-semibold px-3 py-2 rounded w-full mb-2">${txt}</button>`;
+        };
+        const area = $("#actionArea");
+        area.empty();
+        if(det.operStatusCode==='Released' || det.operStatusCode==='Planned') area.append(btn('Başlat','success','btnStart'));
+        const running = ['InProcess','Started','PartiallyReported','SetupStarted','SetupComplete'].includes(det.operStatusCode);
+        if(running){
+            area.append(btn('Durdur','warning','btnStop'));
+            area.append(btn('Hurdala','danger','btnScrap'));
+            area.append(btn('Tamamlandı','primary','btnAddComp'));
+        }
+        if(det.operStatusCode==='Interruption') area.append(btn('Devam Et','success','btnResume'));
+
+        // Events
+        $("#btnStart").click(()=>action('start'));
+        $("#btnResume").click(()=>$.post(`/ShopOrderOperations/${orderNo}/${opNo}/resume`,()=>loadDetails()));
+        $("#btnStop").click(()=> openModal('stop'));
+        $("#btnScrap").click(()=> openModal('scrap'));
+        $("#btnAddComp").click(()=> openModal('complete'));
+    }
+
+    function action(act,body={}){
+        $.ajax({url:`/api/shoporder/operation/${orderNo}/${opNo}/${act}`,type:'POST',contentType:'application/json',
+            data:JSON.stringify(body),success:loadDetails,error:()=>alert('Hata')});
+    }
+
+    // Global helpers for modal & progress
+    let modalAction = '';
+    const scrapReasons = ["Malzeme hatası", "Hasarlı parça", "Bozuk", "Bozuldu"];
+    const stopReasons  = ["Wc molası", "Mola", "Malzeme Bekliyor"];
+
+    function openModal(actionType){
+        modalAction = actionType;
+        if(actionType==='scrap'){
+            $('#modalTitle').text('Hurda Bildir');
+            $('#modalQtyGroup').removeClass('hidden');
+            $('#modalReasonGroup').removeClass('hidden');
+            populateReasons(scrapReasons);
+        } else if(actionType==='complete'){
+            $('#modalTitle').text('Tamamlanan Miktar');
+            $('#modalQtyGroup').removeClass('hidden');
+            $('#modalReasonGroup').addClass('hidden');
+            populateReasons([]);
+        } else if(actionType==='stop'){
+            $('#modalTitle').text('Operasyonu Durdur');
+            $('#modalQtyGroup').addClass('hidden');
+            $('#modalReasonGroup').removeClass('hidden');
+            populateReasons(stopReasons);
+        }
+        $('#modalQty').val('');
+        $('#modalOverlay').removeClass('hidden').addClass('flex');
+    }
+
+    $('#modalCancel').on('click', ()=> $('#modalOverlay').addClass('hidden').removeClass('flex'));
+
+    $('#modalConfirm').on('click', ()=>{
+        let qty = 0;
+        if(modalAction!=='stop'){
+            qty = parseFloat($('#modalQty').val()||'0');
+            if(qty<=0){ alert('Geçerli miktar girin!'); return; }
+        }
+        if(modalAction==='scrap'){
+            const reason = $('#modalReason').val();
+            progressUpdate(0, qty, reason);
+        } else if(modalAction==='complete'){
+            progressUpdate(qty, 0, '');
+        } else if(modalAction==='stop'){
+            const reason = $('#modalReason').val();
+            action('stop', { reason });
+        }
+        $('#modalOverlay').addClass('hidden').removeClass('flex');
+    });
+
+    function progressUpdate(comp, scrap, reason){
+        $.ajax({
+            url:`/ShopOrderOperations/${orderNo}/${opNo}/progress`,
+            type:'POST',
+            contentType:'application/json',
+            data: JSON.stringify({ addedCompleted: comp, addedScrapped: scrap, reason }),
+            success: loadDetails,
+            error: ()=> alert('Miktar güncellenemedi.')
+        });
+    }
+
+    function populateReasons(list){
+        const sel = $('#modalReason');
+        sel.empty();
+        if(list.length===0){ return; }
+        list.forEach(r=> sel.append(`<option value="${r}">${r}</option>`));
+    }
+
+    loadDetails();
+</script> 

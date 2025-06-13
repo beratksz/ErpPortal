@@ -1,0 +1,30 @@
+@model IEnumerable<ErpPortal.Domain.Entities.WorkCenter>
+@{
+    ViewData["Title"] = "İş Merkezleri";
+}
+<div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-transparent bg-clip-text">İş Merkezleri</h2>
+    <a asp-action="Create" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm">+ Ekle</a>
+</div>
+<div class="overflow-x-auto shadow-lg rounded-lg">
+<table class="min-w-full divide-y divide-gray-200 text-sm">
+    <thead class="bg-gray-50">
+        <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kod</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ad</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Açıklama</th>
+            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aktif</th>
+        </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+        @foreach(var wc in Model){
+            <tr>
+                <td class="px-6 py-4 whitespace-nowrap">@wc.Code</td>
+                <td class="px-6 py-4 whitespace-nowrap">@wc.Name</td>
+                <td class="px-6 py-4">@wc.Description</td>
+                <td class="px-6 py-4 text-center">@(wc.IsActive?"✔":"-")</td>
+            </tr>
+        }
+    </tbody>
+</table>
+</div> 

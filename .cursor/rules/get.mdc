@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+[GET.txt](mdc:GET.txt), [PATCH.txt](mdc:PATCH.txt), SOLID, Clean Architecture, Frondend language "Turkish/Türkçe", Tailwind, [metadata.xml](mdc:metadata.xml)
