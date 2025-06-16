@@ -28,13 +28,13 @@
       <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\ErpPortal.Web.rwh9xqe04t.bundle.scp.css'))</AssetFile>
       <Selectors><![CDATA[[]]]></Selectors>
       <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-6wtEkC4ztw5PUDB3OIja8/hSjLiGtOG4ZTmd3yUTtdY="}]]]></EndpointProperties>
-      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"1131"},{"Name":"Content-Type","Value":"text/css"},{"Name":"ETag","Value":"\u00226wtEkC4ztw5PUDB3OIja8/hSjLiGtOG4ZTmd3yUTtdY=\u0022"},{"Name":"Last-Modified","Value":"Fri, 13 Jun 2025 14:15:00 GMT"}]]]></ResponseHeaders>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"1131"},{"Name":"Content-Type","Value":"text/css"},{"Name":"ETag","Value":"\u00226wtEkC4ztw5PUDB3OIja8/hSjLiGtOG4ZTmd3yUTtdY=\u0022"},{"Name":"Last-Modified","Value":"Mon, 16 Jun 2025 04:51:41 GMT"}]]]></ResponseHeaders>
     </StaticWebAssetEndpoint>
     <StaticWebAssetEndpoint Include="_content/ErpPortal.Web/ErpPortal.Web.rwh9xqe04t.bundle.scp.css">
       <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\ErpPortal.Web.rwh9xqe04t.bundle.scp.css'))</AssetFile>
       <Selectors><![CDATA[[]]]></Selectors>
       <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"rwh9xqe04t"},{"Name":"integrity","Value":"sha256-6wtEkC4ztw5PUDB3OIja8/hSjLiGtOG4ZTmd3yUTtdY="},{"Name":"label","Value":"_content/ErpPortal.Web/ErpPortal.Web.bundle.scp.css"}]]]></EndpointProperties>
-      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"1131"},{"Name":"Content-Type","Value":"text/css"},{"Name":"ETag","Value":"\u00226wtEkC4ztw5PUDB3OIja8/hSjLiGtOG4ZTmd3yUTtdY=\u0022"},{"Name":"Last-Modified","Value":"Fri, 13 Jun 2025 14:15:00 GMT"}]]]></ResponseHeaders>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"1131"},{"Name":"Content-Type","Value":"text/css"},{"Name":"ETag","Value":"\u00226wtEkC4ztw5PUDB3OIja8/hSjLiGtOG4ZTmd3yUTtdY=\u0022"},{"Name":"Last-Modified","Value":"Mon, 16 Jun 2025 04:51:41 GMT"}]]]></ResponseHeaders>
     </StaticWebAssetEndpoint>
     <StaticWebAssetEndpoint Include="_content/ErpPortal.Web/favicon.61n19gt1b8.ico">
       <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\favicon.ico'))</AssetFile>

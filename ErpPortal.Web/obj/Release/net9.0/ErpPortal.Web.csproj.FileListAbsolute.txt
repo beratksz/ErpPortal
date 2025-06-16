@@ -468,3 +468,4 @@ C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Web\obj\Release\net9.0\com
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Web\obj\Release\net9.0\compressed\0gawbk0qy0-iljosq99vw.gz
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Web\obj\Release\net9.0\compressed\6dbr4zda02-5ise00p6kd.gz
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Web\obj\Release\net9.0\compressed\5csc16mn9u-o1o13a6vjx.gz
+C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Web\obj\Release\net9.0\ErpPortal.Web.sourcelink.json

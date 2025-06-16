@@ -13,3 +13,4 @@ C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Application\obj\Release\ne
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Application\obj\Release\net9.0\refint\ErpPortal.Application.dll
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Application\obj\Release\net9.0\ErpPortal.Application.pdb
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Application\obj\Release\net9.0\ref\ErpPortal.Application.dll
+C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Application\obj\Release\net9.0\ErpPortal.Application.sourcelink.json

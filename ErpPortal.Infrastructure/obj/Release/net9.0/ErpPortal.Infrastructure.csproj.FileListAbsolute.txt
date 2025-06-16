@@ -17,3 +17,4 @@ C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Infrastructure\obj\Release
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Infrastructure\obj\Release\net9.0\ErpPortal.Infrastructure.pdb
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Infrastructure\obj\Release\net9.0\ErpPortal.Infrastructure.genruntimeconfig.cache
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Infrastructure\obj\Release\net9.0\ref\ErpPortal.Infrastructure.dll
+C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Infrastructure\obj\Release\net9.0\ErpPortal.Infrastructure.sourcelink.json

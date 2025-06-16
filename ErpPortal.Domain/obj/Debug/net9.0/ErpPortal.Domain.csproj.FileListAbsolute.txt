@@ -5,6 +5,7 @@ C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Domain\obj\Debug\net9.0\Er
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Domain\obj\Debug\net9.0\ErpPortal.Domain.AssemblyInfoInputs.cache
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Domain\obj\Debug\net9.0\ErpPortal.Domain.AssemblyInfo.cs
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Domain\obj\Debug\net9.0\ErpPortal.Domain.csproj.CoreCompileInputs.cache
+C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Domain\obj\Debug\net9.0\ErpPortal.Domain.sourcelink.json
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Domain\obj\Debug\net9.0\ErpPortal.Domain.dll
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Domain\obj\Debug\net9.0\refint\ErpPortal.Domain.dll
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Domain\obj\Debug\net9.0\ErpPortal.Domain.pdb

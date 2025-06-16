@@ -165,10 +165,14 @@ namespace ErpPortal.Application.Services
                 operation.OperStatusCode = "Interruption";
                 operation.EndTime = DateTime.UtcNow;
                 operation.InterruptionReason = reason;
-                operation.QuantityCompleted = quantityCompleted;
-                operation.QuantityScrapped = quantityScrapped;
-                operation.QtyComplete = quantityCompleted;
-                operation.QtyScrapped = quantityScrapped;
+                // Eğer tamamlanan/hurda miktarları 0 gönderildiyse mevcut değerleri KORU.
+                if (quantityCompleted > 0 || quantityScrapped > 0)
+                {
+                    operation.QuantityCompleted = quantityCompleted;
+                    operation.QuantityScrapped = quantityScrapped;
+                    operation.QtyComplete = quantityCompleted;
+                    operation.QtyScrapped = quantityScrapped;
+                }
                 operation.ReportedBy = userName;
                 operation.LastInterruptionTime = operation.EndTime;
 
@@ -197,8 +201,8 @@ namespace ErpPortal.Application.Services
                 var patchData = new Dictionary<string, object>
                 {
                     { "OperStatusCode", "Interruption" },
-                    { "QtyComplete", quantityCompleted },
-                    { "QtyScrapped", quantityScrapped },
+                    { "QtyComplete", operation.QuantityCompleted }, // toplam değerler
+                    { "QtyScrapped", operation.QuantityScrapped },
                     { "NoteText", string.IsNullOrEmpty(reason) ? userName : reason },
                     { "ReleaseNo", operation.ReleaseNo },
                     { "SequenceNo", operation.SequenceNo }
@@ -479,12 +483,13 @@ namespace ErpPortal.Application.Services
                 var totalDone = operation.QuantityCompleted + operation.QuantityScrapped;
                 var isCompleted = totalDone >= operation.RevisedQtyDue;
 
-                // API'ye gönderilecek delta payload her zaman EKLENEN miktarları içermeli
-                // IFS QtyComplete/QtyScrapped alanları artış olarak yorumlar.
+                // IFS tarafında QtyComplete / QtyScrapped alanları mutlak (toplam) değerler olarak
+                // güncelleniyor. Bu nedenle her PATCH isteğinde operasyonun güncel TOPLAM
+                // miktarlarını göndermek gerekiyor.
                 var payload = new Dictionary<string, object>
                 {
-                    { "QtyComplete", addedCompleted },
-                    { "QtyScrapped", addedScrapped },
+                    { "QtyComplete", operation.QuantityCompleted },   // toplam tamamlanan
+                    { "QtyScrapped", operation.QuantityScrapped },     // toplam hurda
                     { "NoteText", string.IsNullOrEmpty(reason) ? userName : reason },
                     { "ReleaseNo", operation.ReleaseNo },
                     { "SequenceNo", operation.SequenceNo }

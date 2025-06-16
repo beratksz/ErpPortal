@@ -8,6 +8,7 @@ C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Application\obj\Debug\net9
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Application\obj\Debug\net9.0\ErpPortal.Application.AssemblyInfoInputs.cache
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Application\obj\Debug\net9.0\ErpPortal.Application.AssemblyInfo.cs
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Application\obj\Debug\net9.0\ErpPortal.Application.csproj.CoreCompileInputs.cache
+C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Application\obj\Debug\net9.0\ErpPortal.Application.sourcelink.json
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Application\obj\Debug\net9.0\ErpPorta.1A20A6D7.Up2Date
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Application\obj\Debug\net9.0\ErpPortal.Application.dll
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Application\obj\Debug\net9.0\refint\ErpPortal.Application.dll

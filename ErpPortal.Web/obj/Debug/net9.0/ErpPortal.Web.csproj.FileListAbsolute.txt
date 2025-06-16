@@ -317,6 +317,7 @@ C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Web\obj\Debug\net9.0\ErpPo
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Web\obj\Debug\net9.0\ErpPortal.Web.MvcApplicationPartsAssemblyInfo.cache
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Web\obj\Debug\net9.0\ErpPortal.Web.RazorAssemblyInfo.cache
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Web\obj\Debug\net9.0\ErpPortal.Web.RazorAssemblyInfo.cs
+C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Web\obj\Debug\net9.0\ErpPortal.Web.sourcelink.json
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Web\obj\Debug\net9.0\scopedcss\Views\Shared\_Layout.cshtml.rz.scp.css
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Web\obj\Debug\net9.0\scopedcss\bundle\ErpPortal.Web.styles.css
 C:\Users\berat-oksuz\source\repos\ErpPortal\ErpPortal.Web\obj\Debug\net9.0\scopedcss\projectbundle\ErpPortal.Web.bundle.scp.css
