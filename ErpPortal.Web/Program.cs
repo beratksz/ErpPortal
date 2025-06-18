@@ -60,6 +60,9 @@ builder.Services.AddScoped<IShopOrderOperationRepository, ShopOrderOperationRepo
 builder.Services.AddScoped<IShopOrderRepository, ShopOrderRepository>();
 builder.Services.AddHttpContextAccessor();
 
+// Kalite iş merkezi filtresi
+builder.Services.AddScoped<ErpPortal.Web.Filters.RequireQualityWorkCenterAttribute>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

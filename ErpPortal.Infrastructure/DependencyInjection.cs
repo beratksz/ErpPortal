@@ -31,6 +31,18 @@ namespace ErpPortal.Infrastructure
             services.AddScoped<IWorkCenterService, WorkCenterService>();
             services.AddScoped<IShopOrderService, Application.Services.ShopOrderService>();
 
+            // Kalite: NCR entegrasyonu (typed HTTP client)
+            services.AddHttpClient<INonConformanceApiService, ErpPortal.Infrastructure.ExternalServices.Quality.NonConformanceApiService>(client =>
+            {
+                client.BaseAddress = new Uri(configuration["IfsApi:BaseUrl"]
+                    ?? throw new InvalidOperationException("IfsApi:BaseUrl is not configured."));
+
+                var credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes(
+                    $"{configuration["IfsApi:Username"]}:{configuration["IfsApi:Password"]}"));
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
+            });
+            services.AddScoped<IQualityService, ErpPortal.Application.Services.QualityService>();
+
             // Arka plan senkronizasyon servisi ve API servisi
             services.AddHttpClient<IShopOrderApiService, ShopOrderApiService>(client =>
             {

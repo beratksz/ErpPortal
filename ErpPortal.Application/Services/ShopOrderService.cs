@@ -17,6 +17,7 @@ namespace ErpPortal.Application.Services
         private readonly IUserService _userService;
         private readonly IShopOrderApiService _apiService;
         private readonly IShopOrderRepository _orderRepository;
+        private readonly INonConformanceApiService _ncrApi;
         private readonly ILogger<ShopOrderService> _logger;
 
         public ShopOrderService(
@@ -25,6 +26,7 @@ namespace ErpPortal.Application.Services
             IUserService userService,
             IShopOrderApiService apiService,
             IShopOrderRepository orderRepository,
+            INonConformanceApiService ncrApi,
             ILogger<ShopOrderService> logger)
         {
             _operationRepository = operationRepository;
@@ -32,6 +34,7 @@ namespace ErpPortal.Application.Services
             _userService = userService;
             _apiService = apiService;
             _orderRepository = orderRepository;
+            _ncrApi = ncrApi;
             _logger = logger;
         }
 
@@ -315,36 +318,64 @@ namespace ErpPortal.Application.Services
                     return false;
                 }
 
-                operation.Status = "COMPLETED";
-                operation.OperStatusCode = "Closed";
-                operation.EndTime = DateTime.UtcNow;
-                operation.OpFinishDate = operation.EndTime.Value;
                 operation.QuantityCompleted = quantityCompleted;
                 operation.QuantityScrapped = quantityScrapped;
                 operation.QtyComplete = quantityCompleted;
                 operation.QtyScrapped = quantityScrapped;
                 operation.ReportedBy = userName;
+                operation.EndTime = DateTime.UtcNow;
+                operation.OpFinishDate = operation.EndTime.Value;
 
-                await _operationRepository.UpdateAsync(operation);
-
-                // IFS'te önce statü kapatılır
-                await _apiService.PatchOperationStatusAsync(orderNo, operationNo, "COMPLETED", null, operation.ReleaseNo, operation.SequenceNo, operation.GetEtag());
-
-                var patchData = new Dictionary<string, object>
+                var payload = new Dictionary<string, object>
                 {
-                    { "OperStatusCode", "Closed" },
-                    { "OpFinishDate", DateTime.UtcNow },
+                    { "QtyComplete", quantityCompleted },
+                    { "QtyScrapped", quantityScrapped },
+                    { "OpFinishDate", operation.OpFinishDate },
                     { "NoteText", userName },
                     { "ReleaseNo", operation.ReleaseNo },
                     { "SequenceNo", operation.SequenceNo }
                 };
 
-                var success = await _apiService.PatchOperationDetailsAsync(orderNo, operationNo, patchData, operation.GetEtag());
+                if (quantityScrapped > 0)
+                {
+                    // 1) API: OperStatusCode = PartiallyReported (Closed gönderme!)
+                    // 2) Otomatik NCR oluştur → kaliteye aktar
+
+                    operation.Status = "COMPLETED";
+                    operation.OperStatusCode = "PartiallyReported";
+                    operation.IsAwaitingQuality = true;
+
+                    payload["OperStatusCode"] = "PartiallyReported";
+
+                    // NCR oluştur ve numarayı logla
+                    var ncrNo = await _ncrApi.CreateNcrAsync(orderNo, operationNo, quantityScrapped, $"Auto NCR for scrap qty {quantityScrapped}");
+                    if (!string.IsNullOrEmpty(ncrNo))
+                    {
+                        _logger.LogInformation("Automatic NCR {NcrNo} created for {OrderNo}/{OperationNo}", ncrNo, orderNo, operationNo);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Failed to create automatic NCR for {OrderNo}/{OperationNo}", orderNo, operationNo);
+                    }
+                }
+                else
+                {
+                    // Hurda yok → doğrudan kapat
+                    operation.Status = "COMPLETED";
+                    operation.OperStatusCode = "Closed";
+                    operation.IsAwaitingQuality = false;
+                    payload["OperStatusCode"] = "Closed";
+                    payload["OpFinishDate"] = operation.OpFinishDate;
+                }
+
+                await _operationRepository.UpdateAsync(operation);
+
+                var success = await _apiService.PatchOperationDetailsAsync(orderNo, operationNo, payload, operation.GetEtag());
                 if (!success)
                 {
                     _logger.LogWarning("API patch complete failed for {OrderNo}/{OperationNo}", orderNo, operationNo);
                     operation.IsSyncPending = true;
-                    operation.LastSyncError = $"COMPLETE PATCH failed at {DateTime.UtcNow:O}";
+                    operation.LastSyncError = "COMPLETE PATCH failed at " + DateTime.UtcNow.ToString("O");
                 }
                 else
                 {
@@ -353,8 +384,8 @@ namespace ErpPortal.Application.Services
                 }
 
                 await _operationRepository.UpdateAsync(operation);
-                
-                // WorkLog: son kayıt
+
+                // WorkLog: aktif kaydı kapat
                 var user = await _userService.GetUserByUsernameAsync(userName);
                 if (user != null)
                 {
@@ -497,14 +528,35 @@ namespace ErpPortal.Application.Services
 
                 if (isCompleted)
                 {
-                    // Artık iş tamamen bitti → Closed statüsüyle tek bir PATCH
                     operation.Status = "COMPLETED";
-                    operation.OperStatusCode = "Closed";
                     operation.EndTime = DateTime.UtcNow;
                     operation.OpFinishDate = operation.EndTime.Value;
 
-                    payload["OperStatusCode"] = "Closed";
-                    payload["OpFinishDate"] = operation.OpFinishDate;
+                    if (operation.QuantityScrapped > 0)
+                    {
+                        // Hurda varsa kalite beklesin – OperStatusCode PartiallyReported, NCR aç
+                        operation.OperStatusCode = "PartiallyReported";
+                        operation.IsAwaitingQuality = true;
+                        payload["OperStatusCode"] = "PartiallyReported";
+
+                        var ncrNo = await _ncrApi.CreateNcrAsync(orderNo, operationNo, operation.QuantityScrapped, $"Auto NCR for scrap qty {operation.QuantityScrapped}");
+                        if (!string.IsNullOrEmpty(ncrNo))
+                        {
+                            _logger.LogInformation("Automatic NCR {NcrNo} created for {OrderNo}/{OperationNo}", ncrNo, orderNo, operationNo);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Failed to create automatic NCR for {OrderNo}/{OperationNo}", orderNo, operationNo);
+                        }
+                    }
+                    else
+                    {
+                        // Hurda yok → doğrudan kapat
+                        operation.OperStatusCode = "Closed";
+                        operation.IsAwaitingQuality = false;
+                        payload["OperStatusCode"] = "Closed";
+                        payload["OpFinishDate"] = operation.OpFinishDate;
+                    }
                 }
                 else
                 {
@@ -526,11 +578,6 @@ namespace ErpPortal.Application.Services
                 {
                     operation.IsSyncPending = false;
                     operation.LastSyncError = null;
-
-                    if (isCompleted)
-                    {
-                        operation.IsAwaitingQuality = false;
-                    }
                 }
 
                 await _operationRepository.UpdateAsync(operation);
